@@ -40,7 +40,7 @@ Or even more complex ones:
 {request>host} {request>method} {request>headers>User-Agent>[0]}
 ```
 
-The resulting JSON will respect the hierarchy of the selector keys.
+The resulting JSON will respect the hierarchy of the selector paths.
 
 ## Caddyfile
 
@@ -71,7 +71,7 @@ log {
 }
 ```
 
-Which outputs something like the following JSON respecting the selector's key structure:
+Which outputs something like the following JSON respecting the selector's path structure:
 
 ```json
 {"request":{"host":"localhost:2015"},"duration":0.003321}
