@@ -21,6 +21,7 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/caddyserver/caddy/v2"
+	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/modules/logging"
 	"go.uber.org/zap/buffer"
 	"go.uber.org/zap/zapcore"
@@ -112,3 +113,10 @@ func (e JSONSelectEncoder) EncodeEntry(entry zapcore.Entry, fields []zapcore.Fie
 
 	return buf, err
 }
+
+// Interface guards
+var (
+	_ zapcore.Encoder       = (*JSONSelectEncoder)(nil)
+	_ caddy.Provisioner     = (*JSONSelectEncoder)(nil)
+	_ caddyfile.Unmarshaler = (*JSONSelectEncoder)(nil)
+)
