@@ -1,0 +1,10 @@
+localhost:2015
+
+file_server browse
+
+log {
+  output stdout
+  format jsonselect "{level} {ts} {logger} {mex} {common_log} {duration}" {
+    message_key mex
+  }
+}
