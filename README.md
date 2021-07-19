@@ -69,7 +69,7 @@ For example, to store the status of a log entry in a `httpRequest.responseStatus
 Which will output the following JSON:
 
 ```json
-{"httpRequest":{"responseSize":17064}}
+{"httpRequest":{"responseStatus":404}}
 ```
 
 This is particularly useful to adapt your log entries to different JSON structures like the Stackdriver one.
