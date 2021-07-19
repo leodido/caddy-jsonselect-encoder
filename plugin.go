@@ -109,25 +109,23 @@ func (e JSONSelectEncoder) EncodeEntry(entry zapcore.Entry, fields []zapcore.Fie
 		return buf, err
 	}
 
-	// fixme > indexing array of strings not working at the moment
-	// fixme > this is a bug in jsonparser (see https://github.com/buger/jsonparser/issues/232)
-	// todo > workaround by iterating on paths and calling jsonparser.Get()
 	res := []byte{'{', '}'}
-	jsonparser.EachKey(
-		buf.Bytes(),
-		func(idx int, val []byte, typ jsonparser.ValueType, err error) {
-			// todo > handle error
-			switch typ {
-			case jsonparser.NotExist:
-				// path not found, skip
-			case jsonparser.String:
-				res, _ = jsonparser.Set(res, append(append([]byte{'"'}, val...), '"'), e.setters[idx]...)
-			default:
-				res, _ = jsonparser.Set(res, val, e.setters[idx]...)
-			}
-		},
-		e.getters...,
-	)
+	// Temporary workaround the bug https://github.com/buger/jsonparser/issues/232
+	// todo > switch back to EachKey (see git history) for perf reasons when fixed
+	for idx, paths := range e.getters {
+		val, typ, _, err := jsonparser.Get(buf.Bytes(), paths...)
+		if err != nil {
+			return nil, err
+		}
+		switch typ {
+		case jsonparser.NotExist:
+			// path not found, skip
+		case jsonparser.String:
+			res, _ = jsonparser.Set(res, append(append([]byte{'"'}, val...), '"'), e.setters[idx]...)
+		default:
+			res, _ = jsonparser.Set(res, val, e.setters[idx]...)
+		}
+	}
 
 	// Reset the buffer to output our own content
 	buf.Reset()
