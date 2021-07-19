@@ -26,21 +26,53 @@ jsonselect <selector> {
 
 ### Selector
 
-The syntax is heavily inspired by [buger/jsonparser](https://github.com/buger/jsonparser).
+A selector represents the JSON path of the log entry you want to select.
 
-Thus, you can write a selector like the following one to only output the HTTP status code and the logger name:
+The syntax is heavily inspired by [buger/jsonparser](https://github.com/buger/jsonparser). With some additions...
+
+So, you can write a selector like the following one to only output the HTTP status code and the logger name:
 
 ```caddyfile
 {status} {logger}
 ```
 
-Or even more complex ones:
+Or you can even select deeper in the JSON log entry:
 
 ```caddyfile
-{request>host} {request>method} {request>headers>User-Agent>[0]}
+{request>host} {request>method}
 ```
 
 The resulting JSON will respect the hierarchy of the selector paths.
+
+Thus, for a selector like `{request>method}` the resulting JSON log entry will look like this:
+
+```json
+{"request":{"method":"GET"}}
+```
+
+Notice that the parsing of selectors happens at provisioning time to do not impact encoding performances.
+
+Finally, I extended the syntax to support the reshaping of the resulting JSON keys.
+
+To define a key for a given selector, you can use the following syntax:
+
+```caddyfile
+{key:selector}
+```
+
+For example, to store the status of a log entry in a a `httpRequest.responseStatus` JSON path you can write:
+
+```caddyfile
+{httpResponse>responseStatus:status}
+```
+
+Which will output the following JSON:
+
+```json
+{"httpRequest":{"responseSize":17064}}
+```
+
+This is particularly useful to adapt your log entries to different JSON structures like the Stackdriver one.
 
 ## Caddyfile
 
@@ -97,6 +129,24 @@ This outputs:
 
 ```json
 {"severity":"ERROR","timestamp":"2021-07-16T12:55:10Z","logName":"http.log.access.log0"}
+```
+
+Even more, you can define keys for the resulting output to better match the [Stackdriver log entry format](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry).
+
+Like this:
+
+```caddyfile
+log {
+  format jsonselect "{level} {timestamp:ts} {httpRequest>requestMethod:request>method} {httpRequest>protocol:request>proto} {httpRequest>status:status} {httpRequest>responseSize:size}" {
+    time_format "rfc3339_nano"
+  }
+}
+```
+
+Which outputs:
+
+```json
+{"level":"info","timestamp":"2021-07-19T14:48:56.262966Z","httpRequest":{"protocol":"HTTP/2.0","requestMethod":"GET","responseSize":17604,"status":200}}
 ```
 
 ## Try it out
