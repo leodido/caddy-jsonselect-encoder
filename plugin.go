@@ -41,7 +41,8 @@ type JSONSelectEncoder struct {
 	zapcore.Encoder `json:"-"`
 	Selector        string `json:"selector,omitempty"`
 
-	keys [][]string
+	getters [][]string
+	setters [][]string
 }
 
 func (JSONSelectEncoder) CaddyModule() caddy.ModuleInfo {
@@ -60,13 +61,33 @@ func (e *JSONSelectEncoder) Provision(ctx caddy.Context) error {
 		return fmt.Errorf("selector is mandatory")
 	}
 
-	e.keys = [][]string{}
+	e.setters = [][]string{}
+	e.getters = [][]string{}
 	r := caddy.NewReplacer()
-	r.Map(func(key string) (interface{}, bool) {
-		e.keys = append(e.keys, strings.Split(key, ">"))
+	r.Map(func(sel string) (interface{}, bool) {
+		var set, get string
+
+		parts := strings.Split(sel, ":")
+		if len(parts) == 1 {
+			set = parts[0]
+			get = set
+		} else if len(parts) == 2 {
+			set = parts[0]
+			get = parts[1]
+		} else {
+			// todo > error out - how?
+			return nil, false
+		}
+
+		e.setters = append(e.setters, strings.Split(set, ">"))
+		e.getters = append(e.getters, strings.Split(get, ">"))
 		return nil, false
 	})
 	r.ReplaceAll(e.Selector, "")
+
+	if len(e.setters) != len(e.getters) {
+		return fmt.Errorf("selector must have the same number of setters and getters")
+	}
 
 	e.Encoder = zapcore.NewJSONEncoder(e.ZapcoreEncoderConfig())
 	return nil
@@ -77,7 +98,8 @@ func (e JSONSelectEncoder) Clone() zapcore.Encoder {
 		LogEncoderConfig: e.LogEncoderConfig,
 		Encoder:          e.Encoder.Clone(),
 		Selector:         e.Selector,
-		keys:             e.keys,
+		getters:          e.getters,
+		setters:          e.setters,
 	}
 }
 
@@ -93,13 +115,15 @@ func (e JSONSelectEncoder) EncodeEntry(entry zapcore.Entry, fields []zapcore.Fie
 		func(idx int, val []byte, typ jsonparser.ValueType, err error) {
 			// todo > handle error
 			switch typ {
+			case jsonparser.NotExist:
+				// path not found, skip
 			case jsonparser.String:
-				res, _ = jsonparser.Set(res, append(append([]byte{'"'}, val...), '"'), e.keys[idx]...)
+				res, _ = jsonparser.Set(res, append(append([]byte{'"'}, val...), '"'), e.setters[idx]...)
 			default:
-				res, _ = jsonparser.Set(res, val, e.keys[idx]...)
+				res, _ = jsonparser.Set(res, val, e.setters[idx]...)
 			}
 		},
-		e.keys...,
+		e.getters...,
 	)
 
 	// Reset the buffer to output our own content
