@@ -137,7 +137,7 @@ Like this:
 
 ```caddyfile
 log {
-  format jsonselect "{level} {timestamp:ts} {httpRequest>requestMethod:request>method} {httpRequest>protocol:request>proto} {httpRequest>status:status} {httpRequest>responseSize:size}" {
+  format jsonselect "{level} {timestamp:ts} {httpRequest>requestMethod:request>method} {httpRequest>protocol:request>proto} {httpRequest>status:status} {httpRequest>responseSize:size} {httpRequest>userAgent:request>headers>User-Agent>[0]}" {
     time_format "rfc3339_nano"
   }
 }
@@ -146,7 +146,7 @@ log {
 Which outputs:
 
 ```json
-{"level":"info","timestamp":"2021-07-19T14:48:56.262966Z","httpRequest":{"protocol":"HTTP/2.0","requestMethod":"GET","responseSize":17604,"status":200}}
+{"level":"info","timestamp":"2021-07-19T14:48:56.262966Z","httpRequest":{"protocol":"HTTP/2.0","requestMethod":"GET","responseSize":17604,"status":200,"userAgent":"Mozilla/5.0 ..."}}
 ```
 
 ## Try it out
