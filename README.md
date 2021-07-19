@@ -60,7 +60,7 @@ To define a key for a given selector, you can use the following syntax:
 {key:selector}
 ```
 
-For example, to store the status of a log entry in a a `httpRequest.responseStatus` JSON path you can write:
+For example, to store the status of a log entry in a `httpRequest.responseStatus` JSON path you can write:
 
 ```caddyfile
 {httpResponse>responseStatus:status}
