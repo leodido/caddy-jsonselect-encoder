@@ -109,6 +109,9 @@ func (e JSONSelectEncoder) EncodeEntry(entry zapcore.Entry, fields []zapcore.Fie
 		return buf, err
 	}
 
+	// fixme > indexing array of strings not working at the moment
+	// fixme > this is a bug in jsonparser (see https://github.com/buger/jsonparser/issues/232)
+	// todo > workaround by iterating on paths and calling jsonparser.Get()
 	res := []byte{'{', '}'}
 	jsonparser.EachKey(
 		buf.Bytes(),
