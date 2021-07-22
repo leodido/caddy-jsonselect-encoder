@@ -113,9 +113,7 @@ Maybe you wanna log for Stackdriver ...
 
 ```caddyfile
 log {
-  format if {
-      status sw 400
-  } jsonselect "{severity} {timestamp} {logName}" {
+  format jsonselect "{severity} {timestamp} {logName}" {
     level_key "severity"
     level_format "upper"
     time_key "timestamp"
